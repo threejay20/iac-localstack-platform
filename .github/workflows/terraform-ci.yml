@@ -1,0 +1,96 @@
+name: Terraform CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  TF_VERSION: "1.7.5"
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_DEFAULT_REGION: us-east-1
+
+jobs:
+  fmt-and-validate:
+    name: Format & Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: terraform validate — dev
+        working-directory: environments/dev
+        run: |
+          terraform init -backend=false -no-color
+          terraform validate -no-color
+
+      - name: terraform validate — prod
+        working-directory: environments/prod
+        run: |
+          terraform init -backend=false -no-color
+          terraform validate -no-color
+
+  localstack-plan:
+    name: LocalStack Plan (dev)
+    runs-on: ubuntu-latest
+    needs: fmt-and-validate
+
+    services:
+      localstack:
+        image: localstack/localstack:3.4
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: s3,iam,ec2,sts,cloudwatch,logs,sns,autoscaling,elasticloadbalancingv2
+          DEBUG: "0"
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 30s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Bootstrap LocalStack state buckets
+        run: bash scripts/localstack-init.sh
+
+      - name: Register mock AMI in LocalStack
+        id: mock-ami
+        run: |
+          AMI_ID=$(aws --endpoint-url=http://localhost:4566 \
+            ec2 register-image \
+            --name "ci-mock-ami" \
+            --architecture x86_64 \
+            --root-device-name /dev/xvda \
+            --virtualization-type hvm \
+            --query 'ImageId' \
+            --output text)
+          echo "ami_id=${AMI_ID}" >> "$GITHUB_OUTPUT"
+          echo "Registered mock AMI: ${AMI_ID}"
+
+      - name: terraform init — dev
+        working-directory: environments/dev
+        run: terraform init -no-color
+
+      - name: terraform plan — dev
+        working-directory: environments/dev
+        run: |
+          terraform plan \
+            -no-color \
+            -input=false \
+            -var "ami_id=${{ steps.mock-ami.outputs.ami_id }}"
