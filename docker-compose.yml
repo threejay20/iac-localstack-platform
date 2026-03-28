@@ -1,0 +1,32 @@
+---
+# LocalStack — simulates AWS services locally for Terraform development
+# Provides: EC2, S3, IAM, STS, CloudWatch, SNS, ALB, Autoscaling
+
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack:3.4
+    container_name: localstack
+    ports:
+      - "4566:4566"       # Main LocalStack endpoint (all services)
+      - "4510-4559:4510-4559"  # External services port range
+    environment:
+      - SERVICES=s3,iam,ec2,sts,cloudwatch,logs,sns,autoscaling,elasticloadbalancingv2
+      - DEBUG=0
+      - LOCALSTACK_HOST=localhost
+      - PERSISTENCE=1     # Persist state across restarts
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  localstack-data:
+    driver: local
