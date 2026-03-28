@@ -37,15 +37,15 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-    ec2            = "http://localhost:4566"
-    s3             = "http://localhost:4566"
-    iam            = "http://localhost:4566"
-    sts            = "http://localhost:4566"
-    autoscaling    = "http://localhost:4566"
+    ec2                    = "http://localhost:4566"
+    s3                     = "http://localhost:4566"
+    iam                    = "http://localhost:4566"
+    sts                    = "http://localhost:4566"
+    autoscaling            = "http://localhost:4566"
     elasticloadbalancingv2 = "http://localhost:4566"
-    cloudwatch     = "http://localhost:4566"
-    logs           = "http://localhost:4566"
-    sns            = "http://localhost:4566"
+    cloudwatch             = "http://localhost:4566"
+    logs                   = "http://localhost:4566"
+    sns                    = "http://localhost:4566"
   }
 }
 
@@ -85,8 +85,8 @@ module "vpc" {
   cidr_block = var.vpc_cidr
 
   subnets = {
-    public-a = { cidr = "10.10.0.0/24", az = "${var.aws_region}a", type = "public" }
-    public-b = { cidr = "10.10.1.0/24", az = "${var.aws_region}b", type = "public" }
+    public-a  = { cidr = "10.10.0.0/24", az = "${var.aws_region}a", type = "public" }
+    public-b  = { cidr = "10.10.1.0/24", az = "${var.aws_region}b", type = "public" }
     private-a = { cidr = "10.10.10.0/24", az = "${var.aws_region}a", type = "private" }
     private-b = { cidr = "10.10.11.0/24", az = "${var.aws_region}b", type = "private" }
   }
@@ -133,20 +133,20 @@ module "compute" {
   public_subnet_ids  = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
 
-  ami_id             = var.ami_id
-  instance_type      = "t3.micro"
-  min_size           = 1
-  max_size           = 2
-  desired_capacity   = 1
+  ami_id           = var.ami_id
+  instance_type    = "t3.micro"
+  min_size         = 1
+  max_size         = 2
+  desired_capacity = 1
 
-  instance_role_name    = module.iam.ec2_instance_role_name
-  config_s3_bucket      = module.config_bucket.bucket_id
-  app_version           = var.app_version
-  environment           = local.environment
-  health_check_path     = "/health/ready"
-  enable_access_logs    = false
-  access_log_bucket     = ""
-  alarm_sns_arns        = []
+  instance_role_name = module.iam.ec2_instance_role_name
+  config_s3_bucket   = module.config_bucket.bucket_id
+  app_version        = var.app_version
+  environment        = local.environment
+  health_check_path  = "/health/ready"
+  enable_access_logs = false
+  access_log_bucket  = ""
+  alarm_sns_arns     = []
 
   tags = local.common_tags
 

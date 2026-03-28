@@ -159,5 +159,5 @@ resource "aws_s3_bucket_logging" "app" {
   bucket = aws_s3_bucket.app.id
 
   target_bucket = aws_s3_bucket.access_logs[0].id
-  target_prefix  = "access-logs/"
+  target_prefix = "access-logs/"
 }

@@ -79,9 +79,9 @@ resource "aws_iam_policy" "s3_app_write" {
         ]
       },
       {
-        Sid    = "AllowBucketList"
-        Effect = "Allow"
-        Action = ["s3:ListBucket"]
+        Sid      = "AllowBucketList"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
         Resource = ["arn:aws:s3:::${var.app_data_bucket_name}"]
         Condition = {
           StringLike = {
