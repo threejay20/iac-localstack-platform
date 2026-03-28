@@ -6,7 +6,7 @@ remote state management, multi-environment promotion, and least-privilege IAM.
 
 ---
 
-## Senior Skills Demonstrated
+## Skills Demonstrated
 
 | Skill | Evidence |
 |---|---|
